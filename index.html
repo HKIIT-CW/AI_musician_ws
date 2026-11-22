@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 廣東歌創作體驗班 | AI Cantonese Song Creation Workshop</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & Noto Sans TC -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+TC:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <!-- Canvas Confetti Library -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans TC', 'sans-serif'],
+            mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace']
+          },
+          colors: {
+            brand: {
+              indigo: '#4f46e5',
+              rose: '#e11d48',
+              sky: '#0284c7',
+              amber: '#d97706',
+              emerald: '#059669',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', 'Noto Sans TC', sans-serif;
+      background-color: #dbe2ef;
+      background-image: radial-gradient(#94a3b8 1.5px, transparent 1.5px);
+      background-size: 28px 28px;
+      color: #0f172a;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #94a3b8;
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+  </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col justify-between select-none">
+
+  <!-- TOP HEADER TOOLBAR -->
+  <header class="bg-white/95 backdrop-blur border-b border-slate-300 px-4 sm:px-6 py-3 flex items-center justify-between z-30 shadow-md shrink-0">
+    <!-- Left: Branding & Drawer Trigger -->
+    <div class="flex items-center space-x-3 sm:space-x-4">
+      <button onclick="toggleMenu()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-sm sm:text-base flex items-center space-x-2 transition border border-slate-300" title="Press M for Slide Menu">
+        <span>☰</span>
+        <span id="txt-menu-btn" class="hidden sm:inline">選單</span>
+      </button>
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <span class="px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 font-extrabold text-xs sm:text-sm border border-indigo-200">AI MUSIC</span>
+        <h1 id="txt-header-title" class="font-black text-slate-900 text-base sm:text-xl tracking-tight truncate max-w-[220px] sm:max-w-md md:max-w-lg">
+          AI 廣東歌創作體驗班
+        </h1>
+      </div>
+    </div>
+
+    <!-- Center: Timer Utility -->
+    <div class="relative flex items-center bg-slate-100 rounded-xl p-1.5 border border-slate-300 shadow-inner">
+      <div id="timer-display" class="font-mono font-black text-indigo-700 px-3 py-1 text-base sm:text-xl min-w-[70px] text-center">
+        00:00
+      </div>
+      <button id="timer-toggle-btn" onclick="toggleTimer()" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg font-bold text-xs sm:text-sm hover:bg-indigo-700 transition shadow">
+        ▶ Start
+      </button>
+      <button onclick="resetTimer()" class="px-2.5 py-1.5 text-slate-600 hover:bg-slate-200 rounded-lg font-bold text-sm transition ml-1">
+        ↺
+      </button>
+      <button onclick="toggleTimerMenu()" class="px-2 py-1.5 text-slate-600 hover:text-slate-900 font-bold text-base">
+        ⚙
+      </button>
+      <!-- Timer Preset Dropdown -->
+      <div id="timer-dropdown" class="hidden absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white rounded-xl shadow-2xl border border-slate-300 p-3 z-50 min-w-[180px] text-sm">
+        <div class="font-extrabold text-slate-700 mb-2 px-1 text-xs sm:text-sm" id="txt-timer-preset-title">設置倒數計時</div>
+        <button onclick="setTimerPreset(300)" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 rounded-lg font-bold text-slate-700">⏱ 5 Mins (練唱/寫詞)</button>
+        <button onclick="setTimerPreset(480)" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 rounded-lg font-bold text-slate-700">⏱ 8 Mins (生成歌曲)</button>
+        <button onclick="setTimerPreset(600)" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 rounded-lg font-bold text-slate-700">⏱ 10 Mins (修音與封面)</button>
+        <button onclick="setTimerPreset(900)" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 rounded-lg font-bold text-slate-700">⏱ 15 Mins (分組展示)</button>
+      </div>
+    </div>
+
+    <!-- Right: Language Toggle & Notes Button -->
+    <div class="flex items-center space-x-2 sm:space-x-3">
+      <!-- Language Toggle Button -->
+      <button onclick="toggleLanguage()" class="px-3.5 py-2 bg-slate-900 text-white font-extrabold text-xs sm:text-base rounded-xl hover:bg-indigo-600 transition flex items-center space-x-1.5 shadow-md">
+        <span id="lang-indicator">🌐 繁體中文</span>
+      </button>
+      
+      <!-- Instructor Notes Toggle Button -->
+      <button onclick="toggleNotes()" id="btn-notes" class="px-3 py-2 bg-amber-100 text-amber-900 font-bold text-xs sm:text-base rounded-xl hover:bg-amber-200 transition border border-amber-300 flex items-center space-x-1.5 shadow-sm">
+        <span>💡</span>
+        <span id="txt-notes-btn" class="hidden md:inline">備課筆記 (N)</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN PRESENTATION CANVAS BACKDROP -->
+  <main class="flex-1 relative overflow-hidden flex flex-col justify-center items-center p-3 sm:p-5 lg:p-6">
+    <!-- WIDESCREEN PPT CANVAS CARD -->
+    <div class="w-full max-w-[1480px] h-full bg-white rounded-2xl border-2 border-slate-300 shadow-2xl flex flex-col overflow-hidden relative">
+      
+      <!-- Top Accent Bar -->
+      <div class="h-2.5 bg-gradient-to-r from-indigo-600 via-rose-500 to-amber-500 shrink-0"></div>
+
+      <!-- Slide Main Content Viewport -->
+      <div id="slide-container" class="flex-1 overflow-y-auto p-6 sm:p-8 lg:p-10 custom-scrollbar space-y-6">
+        <!-- Slide Content Dynamically Rendered -->
+      </div>
+
+      <!-- Slide Canvas Inner Footer Indicator -->
+      <div class="bg-slate-50 border-t border-slate-200 px-6 py-2 flex items-center justify-between text-slate-500 font-semibold text-xs sm:text-sm shrink-0">
+        <span class="truncate pr-4">AI 廣東歌創作體驗班 | AI Cantonese Song Creation Workshop</span>
+        <span id="canvas-slide-num" class="font-mono font-bold text-indigo-700 shrink-0">Slide 1 / 14</span>
+      </div>
+    </div>
+  </main>
+
+  <!-- INSTRUCTOR NOTES MODAL / DRAWER -->
+  <div id="notes-panel" class="hidden fixed bottom-20 right-6 w-[420px] max-w-[calc(100vw-2rem)] bg-amber-50 border-2 border-amber-300 rounded-2xl shadow-2xl p-5 z-40 text-amber-950 transition-all">
+    <div class="flex justify-between items-center pb-3 border-b border-amber-200 mb-3">
+      <div class="font-extrabold text-base sm:text-lg flex items-center space-x-2 text-amber-900">
+        <span class="text-xl">💡</span>
+        <span id="txt-notes-header">導師備課與教學提醒</span>
+      </div>
+      <button onclick="toggleNotes()" class="text-amber-800 hover:text-amber-950 font-black text-2xl">&times;</button>
+    </div>
+    <div id="notes-content" class="text-base sm:text-lg leading-relaxed text-amber-900 custom-scrollbar max-h-72 overflow-y-auto font-medium space-y-2">
+      <!-- Dynamic notes content -->
+    </div>
+  </div>
+
+  <!-- SLIDE DRAWER MENU (M) -->
+  <div id="menu-drawer" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-start">
+    <div class="w-80 sm:w-[420px] bg-white h-full shadow-2xl flex flex-col">
+      <div class="p-5 bg-slate-900 text-white flex justify-between items-center">
+        <h2 class="font-black text-xl sm:text-2xl flex items-center space-x-2">
+          <span>📚</span>
+          <span id="txt-drawer-title">簡報章節目錄</span>
+        </h2>
+        <button onclick="toggleMenu()" class="text-slate-400 hover:text-white font-black text-2xl">&times;</button>
+      </div>
+      <div id="menu-list" class="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+        <!-- Rendered list of 14 slides -->
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER NAVIGATION BAR -->
+  <footer class="bg-white border-t border-slate-300 px-4 sm:px-6 py-3 flex items-center justify-between z-30 shrink-0 shadow-lg">
+    <!-- Prev Button -->
+    <button onclick="prevSlide()" class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 font-extrabold text-slate-800 text-base sm:text-lg flex items-center space-x-2 transition border border-slate-300 disabled:opacity-40">
+      <span>←</span>
+      <span id="txt-prev">上一頁</span>
+    </button>
+
+    <!-- Slide Indicator & Progress -->
+    <div class="flex flex-col items-center max-w-sm w-full px-4">
+      <div class="text-sm sm:text-base font-extrabold text-slate-800 tracking-wide mb-1.5">
+        <span id="txt-slide-label">簡報</span> <span id="current-slide-num" class="text-indigo-600 font-black text-base sm:text-lg">1</span> / <span id="total-slide-num">14</span>
+      </div>
+      <!-- Progress Bar Track -->
+      <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden border border-slate-300">
+        <div id="progress-bar" class="bg-gradient-to-r from-indigo-600 to-indigo-500 h-full transition-all duration-300" style="width: 7.14%;"></div>
+      </div>
+    </div>
+
+    <!-- Next Button -->
+    <button onclick="nextSlide()" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 font-extrabold text-white text-base sm:text-lg flex items-center space-x-2 transition shadow-lg shadow-indigo-200 disabled:opacity-40">
+      <span id="txt-next">下一頁</span>
+      <span>→</span>
+    </button>
+  </footer>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-2xl text-base font-bold shadow-2xl z-50 transition opacity-0 pointer-events-none flex items-center space-x-3 border border-slate-700">
+    <span class="text-xl">✅</span>
+    <span id="toast-text">已成功複製到剪貼簿！</span>
+  </div>
+
+  <!-- APPLICATION LOGIC & DATA -->
+  <script>
+    // --- GLOBAL STATE ---
+    let currentSlide = 0;
+    let currentLang = 'zh'; // 'zh' or 'en'
+    let timerSeconds = 0;
+    let timerInterval = null;
+    let isTimerRunning = false;
+    let notesOpen = false;
+
+    // Interactive State Trackers
+    let slide3PresetTopic = '懷舊港式茶餐廳';
+    let slide3PresetEmotion = '溫馨懷舊';
+    let slide6Checklist = [false, false, false, false, false];
+    let slide11ArtStyle = 'Cyberpunk Neon';
+    let slide11Mood = 'Midnight Neon';
+    let slide13InstructorChecks = [false, false, false, false];
+    let slide13StudentChecks = [false, false, false, false];
+
+    // --- BILINGUAL DICTIONARY DATA (14 SLIDES COMPLETE) ---
+    const slideData = [
+      // SLIDE 0: Title & Interactive Agenda
+      {
+        id: 0,
+        title: { zh: "AI 廣東歌創作體驗班", en: "AI Cantonese Song Creation Workshop" },
+        subtitle: { zh: "90 分鐘從零開始完成第一首原創粵語歌曲", en: "Create Your First Original Cantonese Song from Scratch in 90 Minutes" },
+        info: { zh: "⏱ 課程時長：1.5 小時 | 適合對象：音樂零基礎與 AI 初學者", en: "⏱ Duration: 1.5 Hours | Target Audience: Complete Music & AI Beginners" },
+        outcomesTitle: { zh: "🎯 課程三大核心學習目標", en: "🎯 3 Key Learning Outcomes" },
+        outcomes: [
+          { title: { zh: "1. 概念構思與粵語歌詞生成", en: "1. Concept & Cantonese Lyrics Prompting" }, desc: { zh: "掌握 AI Prompt 結構，精準生成符合廣東歌協音韻律的歌詞。", en: "Master AI prompt structures to generate naturally rhyming Cantonese lyrics." } },
+          { title: { zh: "2. Suno 歌曲生成與修音技巧", en: "2. Suno AI Music Generation & Pronunciation Fix" }, desc: { zh: "運用風格標籤控制音樂曲風，並解決粵語 AI 倒字與發音問題。", en: "Use style tags to shape music genre and fix AI Cantonese mispronunciations." } },
+          { title: { zh: "3. 視覺封面設計與 BandLab 分軌錄製", en: "3. Cover Art & BandLab Vocal Recording Workflow" }, desc: { zh: "使用 Midjourney/DALL-E 生成專輯封面，及 BandLab 錄製人聲導唱。", en: "Design AI cover art and record custom vocals over instrumental stems in BandLab." } }
+        ],
+        agendaTitle: { zh: "📅 90 分鐘體驗班動態時間表 (點擊跳轉指定章節)", en: "📅 90-Minute Dynamic Agenda (Click to jump to slide)" },
+        agenda: [
+          { time: "00 - 20 min", title: { zh: "Phase 1: 概念與歌詞生成", en: "Phase 1: Concept & Lyrics Generation" }, targetSlide: 1 },
+          { time: "20 - 55 min", title: { zh: "Phase 2: AI 音樂生成與修音實戰", en: "Phase 2: Suno AI Generation & Pitch Tuning" }, targetSlide: 5 },
+          { time: "55 - 75 min", title: { zh: "Phase 3: 視覺封面設計與 BandLab 選修", en: "Phase 3: Cover Design & BandLab Vocals" }, targetSlide: 9 },
+          { time: "75 - 90 min", title: { zh: "Phase 4: 作品展示與總結結業", en: "Phase 4: Song Showcase & Wrap-Up" }, targetSlide: 12 }
+        ],
+        notes: {
+          zh: "導師建議：開場時請先播出一首過去學員的優秀 AI 廣東歌範例（10秒），迅速激發學員興趣。強調『不需要懂樂理，人人都能做音樂』。",
+          en: "Instructor Tip: Play a 10-second sample of a past student's AI Cantonese song right at the start to spark excitement. Remind students: 'No musical background required!'"
+        }
+      },
+      // SLIDE 1: Today's Challenge
+      {
+        id: 1,
+        title: { zh: "今日挑戰：90 分鐘完成一首廣東歌！", en: "Today's Challenge: Complete a Cantonese Song in 90 Mins!" },
+        subtitle: { zh: "從創意發想到最終導出完整作品的四大全景管線", en: "The 4-Step Full Pipeline from Concept to Final Export" },
+        pipeline: [
+          { step: "01", name: { zh: "主題靈感", en: "Theme & Concept" }, detail: { zh: "確定歌曲故事、情感基調與關鍵畫面", en: "Define storyline, emotional vibe, & key imagery" }, color: "border-indigo-500 bg-indigo-50" },
+          { step: "02", name: { zh: "AI 寫詞修詞", en: "AI Lyrics & Refinement" }, detail: { zh: "Prompt 導引 LLM 產出高協音度粵語詞", en: "Prompt LLM for Cantonese rhyming lyrics" }, color: "border-rose-500 bg-rose-50" },
+          { step: "03", name: { zh: "Suno 曲風生成", en: "Suno AI Generation" }, detail: { zh: "選定標籤、處理倒字與生成音軌", en: "Select style tags, fix mispronunciations" }, color: "border-sky-500 bg-sky-50" },
+          { step: "04", name: { zh: "封面與錄音", en: "Cover & Recording" }, detail: { zh: "AI 封面設計 + BandLab 分軌人聲錄製", en: "AI visual cover + BandLab stems & vocal recording" }, color: "border-amber-500 bg-amber-50" }
+        ],
+        callout: {
+          zh: "💡 導師特別提醒：不要在初期追求 100% 完美！快速迭代生成第一版，再逐步精修，是 AI 創作效率最高的密技。",
+          en: "💡 Instructor Golden Rule: Don't get stuck chasing perfection early on! Rapidly generate Version 1, then refine iteratively."
+        },
+        notes: {
+          zh: "導師備課：提醒學員打開心態，AI 創作的核心在於『導演思維』——你提供方向與剪裁，AI 負責執行素材。",
+          en: "Instructor Note: Encourage students to adopt a 'Director Mindset'—you steer the creative vision, AI provides the raw materials."
+        }
+      },
+      // SLIDE 2: Step 1 - Where does a song start?
+      {
+        id: 2,
+        title: { zh: "Step 1：歌由何處來？創作核心四要素", en: "Step 1: Where Does a Song Start? 4 Key Elements" },
+        subtitle: { zh: "在要求 AI 寫詞前，先建立清晰的歌曲骨架", en: "Build a strong structural framework before asking AI to write lyrics" },
+        elements: [
+          { icon: "🎯", title: { zh: "主題 (Theme)", en: "Theme" }, desc: { zh: "這首歌講述什麼故事？(例如：深夜下班的港鐵、懷舊茶餐廳)", en: "What story are you telling? (e.g. Late-night MTR commute)" } },
+          { icon: "🎭", title: { zh: "情感 (Emotion)", en: "Emotion" }, desc: { zh: "聽眾應該感受到什麼？(例如：無奈勵志、溫馨懷舊、熱血爆棚)", en: "What emotion should listeners feel? (e.g. Nostalgic, Energetic)" } },
+          { icon: "👥", title: { zh: "敘事對象 (Audience)", en: "Audience" }, desc: { zh: "這首歌是唱給誰聽的？(例如：打工仔、遠赴他鄉的朋友、過去的自己)", en: "Who are you singing to? (e.g. City workers, past self)" } },
+          { icon: "🖼️", title: { zh: "畫面感 (Imagery)", en: "Imagery" }, desc: { zh: "歌詞中包含哪些具體意象？(例如：雨夜霓虹燈、一杯凍鴛鴦)", en: "What specific visuals appear? (e.g. Rain-slicked neon signs)" } }
+        ],
+        exampleBoxTitle: { zh: "💡 實戰案例解析：《追夢》", en: "💡 Practical Example: 'Chasing Dreams'" },
+        exampleTable: [
+          { key: { zh: "主題 Theme", en: "Theme" }, val: { zh: "三十歲後在香港重拾音樂夢想", en: "Pursuing music dreams in Hong Kong after 30" } },
+          { key: { zh: "情感 Emotion", en: "Emotion" }, val: { zh: "前半段孤獨無奈 ➔ 主歌後轉為熱血堅定", en: "Lonely melancholic start ➔ Energetic triumphant chorus" } },
+          { key: { zh: "畫面感 Imagery", en: "Imagery" }, val: { zh: "九龍塘天橋、吉他盒裡的零錢、深夜的咖啡罐", en: "Kowloon Tong footbridge, loose change in guitar case" } }
+        ],
+        notes: {
+          zh: "導師提醒：邀請 1-2 位學員分享他們想寫的主題，現場幫忙提鍊為這 4 個要素。",
+          en: "Instructor Tip: Ask 1-2 audience members for song ideas and quickly break them down using these 4 pillars on screen."
+        }
+      },
+      // SLIDE 3: Interactive Lyrics Prompt Builder
+      {
+        id: 3,
+        title: { zh: "Step 2：生成粵語歌詞 (Prompt 生成器)", en: "Step 2: Generating Cantonese Lyrics (Prompt Builder)" },
+        subtitle: { zh: "互動體驗：點選預設主題或自訂內容，即時生成高質量 Prompt", en: "Interactive: Select presets or customize inputs to build your prompt" },
+        notes: {
+          zh: "導師提醒：示範複製 Prompt 到 ChatGPT / Claude / Kimi，並展示生成結果。",
+          en: "Instructor Tip: Demonstrate copying the generated prompt into ChatGPT or Claude live."
+        }
+      },
+      // SLIDE 4: Refining Lyrics
+      {
+        id: 4,
+        title: { zh: "Step 3：歌詞微調與韻律修訂", en: "Step 3: Refining Lyrics & Rhyming Tone Match" },
+        subtitle: { zh: "AI 歌詞常犯錯誤與廣東歌特有『協音』優化清單", en: "Common AI mistakes and Cantonese tone match optimization" },
+        checklist: [
+          { title: { zh: "1. 聲調契合度 (協音)", en: "1. Tone Match (Harmonization)" }, desc: { zh: "廣東歌有九聲六調，高低音必須匹配旋律（避免將『救命』唱成『舊餅』）。", en: "Cantonese has 9 tones; high/low pitches must match the vocal melody." } },
+          { title: { zh: "2. 粵語口語 vs 書面語平衡", en: "2. Colloquial vs Written Balance" }, desc: { zh: "純口語太俗、純書面語太硬！建議主歌偏口語描寫，副歌偏書面語抒情。", en: "Blend colloquial storytelling in Verses with poetic lyrical text in Chorus." } },
+          { title: { zh: "3. 標籤結構完整度", en: "3. Structural Tag Completeness" }, desc: { zh: "確保包含 [Verse], [Chorus], [Bridge], [Outro] 標籤，讓 Suno 識別曲式。", en: "Include clear tags like [Verse], [Chorus], and [Outro] so Suno parses song parts." } }
+        ],
+        promptTitle: { zh: "🛠️ AI 歌詞修訂專用 Prompt (點擊複製)", en: "🛠️ AI Lyric Refinement Prompt (Click to Copy)" },
+        refinementPrompt: {
+          zh: "請幫我修訂以下廣東歌詞：\n1. 保持廣東話口語與雅緻書面語的平衡\n2. 增強押韻（採用粵語押韻，如：-ang, -ing, -on 韻）\n3. 請依據標準歌曲結構標註 [Verse 1], [Pre-Chorus], [Chorus], [Bridge], [Outro]\n\n待修訂歌詞：\n(貼上你的第一版歌詞)",
+          en: "Please refine the following Cantonese lyrics:\n1. Maintain a natural balance between spoken Cantonese idioms and lyrical elegance.\n2. Ensure rhyming in standard Cantonese vowel endings.\n3. Format clearly with tags: [Verse 1], [Pre-Chorus], [Chorus], [Bridge], [Outro].\n\nDraft Lyrics:\n(Paste your draft lyrics here)"
+        },
+        notes: {
+          zh: "導師提醒：強調『協音』是廣東歌最獨特的美感，如果 AI 唱得彆扭，最快的方法是換一個近義詞！",
+          en: "Instructor Tip: Highlight that if a Cantonese line sounds awkward when sung, swapping to a synonym is the fastest fix!"
+        }
+      },
+      // SLIDE 5: Meet Suno AI
+      {
+        id: 5,
+        title: { zh: "Step 4：認識 Suno AI 音樂生成器", en: "Step 4: Meet Suno AI Music Generator" },
+        subtitle: { zh: "6 步核心操作流程與音樂風格標籤 (Style Tags) 庫", en: "6-Step Core Workflow & Music Style Tag Library" },
+        workflowSteps: [
+          { num: "1", text: { zh: "註冊 / 登入 Suno.com", en: "Register / Log in to Suno.com" } },
+          { num: "2", text: { zh: "開啟 [Custom Mode]", en: "Turn on [Custom Mode]" } },
+          { num: "3", text: { zh: "貼上修訂後的粵語歌詞", en: "Paste refined Cantonese lyrics" } },
+          { num: "4", text: { zh: "輸入 Style of Music 標籤", en: "Input Style of Music tags" } },
+          { num: "5", text: { zh: "輸入歌曲名稱 (Title)", en: "Enter your Song Title" } },
+          { num: "6", text: { zh: "點擊 [Create] 生成兩首備選", en: "Click [Create] (Generates 2 takes)" } }
+        ],
+        stylePresetsTitle: { zh: "🎵 常用廣東歌曲風標籤 (點擊複製)", en: "🎵 Popular Cantopop Style Tags (Click to Copy)" },
+        stylePresets: [
+          { name: { zh: "經典港式流行抒情", en: "Classic Cantopop Ballad" }, tag: "Cantopop, emotional ballad, piano, acoustic guitar, strings, passionate vocals, 90s Hong Kong style" },
+          { name: { zh: "復古城市流行 (City Pop)", en: "Retro City Pop" }, tag: "80s City Pop, Cantopop, groovy bassline, upbeat synth, funky rhythm, nostaglic HK night" },
+          { name: { zh: "獨立搖滾 / 流行搖滾", en: "Indie / Pop Rock" }, tag: "Hong Kong Indie rock, driving drums, electric guitar riff, energetic, emotional male vocal" },
+          { name: { zh: "治癒系 Lo-fi 輕音樂", en: "Chill Lo-fi Acoustic" }, tag: "Lo-fi Cantopop, soft piano, acoustic guitar, warm chill vibe, relaxed vocal" }
+        ],
+        notes: {
+          zh: "導師提醒：提醒學員在 Style of Music 中一定要加入 'Cantopop' 關鍵字，這能大幅提升 AI 對粵語發音的理解！",
+          en: "Instructor Tip: Remind students to always include 'Cantopop' in Style of Music tags—it significantly improves Suno's Cantonese pronunciation!"
+        }
+      },
+      // SLIDE 6: Hands-On: Generate Your First Song
+      {
+        id: 6,
+        title: { zh: "實戰演練：生成你的第一首廣東歌", en: "Hands-On: Generate Your First Cantonese Song" },
+        subtitle: { zh: "時長：8 分鐘 | 請依據右側自我檢查清單逐步完成", en: "Duration: 8 Mins | Complete tasks using the interactive checklist" },
+        checklistTitle: { zh: "✅ 生成與自我檢查清單 (點擊勾選進度)", en: "✅ Song Generation Progress Checklist (Click to check)" },
+        tasks: [
+          { zh: "已於 Suno 貼上帶有 [Verse] [Chorus] 標籤的歌詞", en: "Pasted lyrics with proper [Verse] and [Chorus] tags in Suno" },
+          { zh: "已填寫 Style of Music 標籤 (包含 Cantopop 關鍵字)", en: "Filled in Style of Music tags (including 'Cantopop' keyword)" },
+          { zh: "已點擊 Create 並生成了 2 首不同版本的音軌", en: "Clicked Create and generated 2 distinct song versions" },
+          { zh: "已試聽並選出發音較順暢的一首版本", en: "Listened to both tracks and picked the clearer version" },
+          { zh: "已點擊 [...] 複製歌曲連結準備分享", en: "Clicked [...] to copy the shareable song link" }
+        ],
+        backupPlanTitle: { zh: "🚨 導師備用方案 (如遇網絡擁堵或點數耗盡)", en: "🚨 Backup Plan (In case of network delay or zero credits)" },
+        backupPlanText: {
+          zh: "若遇到生成卡住，可使用導師提供的『預製歌詞與 Style Tags 快速通道』，或與旁邊同學組隊共用帳號生成。",
+          en: "If generation freezes, use the instructor's preset lyric tokens or pair up with your neighbor to share an account."
+        },
+        notes: {
+          zh: "導師備課：播放倒數計時器（8分鐘），在教室巡視協助遇到登入或語系設置問題的學員。",
+          en: "Instructor Note: Start the 8-minute countdown timer and walk around the classroom helping with login or prompt issues."
+        }
+      },
+      // SLIDE 7: Why does AI mispronounce Cantonese?
+      {
+        id: 7,
+        title: { zh: "Step 5：為什麼 AI 會『倒字』與字音不準？", en: "Step 5: Why Does AI Mispronounce Cantonese?" },
+        subtitle: { zh: "深入了解粵語九聲六調與 AI 音樂生成器的博弈", en: "Understanding Cantonese 9 Tones & AI Music Generation Constraints" },
+        reasons: [
+          { title: { zh: "1. 九聲六調的音高限制", en: "1. Pitch Constraints of 9 Tones" }, desc: { zh: "粵語聲調本身帶有固定音高（如 1聲高平、6聲低平）。當 AI 生成的旋律走向與字音聲調相反時，就會產生『倒字』。", en: "Cantonese tones carry fixed pitch contours. When Suno's melody moves counter to the tone pitch, mispronunciation occurs." }, color: "bg-indigo-50 border-indigo-300" },
+          { title: { zh: "2. 訓練數據中的語系偏向", en: "2. Training Data Bias" }, desc: { zh: "AI 訓練資料庫中國語/英語佔絕大多數。當標籤未寫明 Cantopop 時，AI 容易用國語發音邏輯去套用廣東話漢字。", en: "AI models have far more Mandarin/English training data. Without 'Cantopop' tags, AI defaults to Mandarin phonetic rules." }, color: "bg-rose-50 border-rose-300" },
+          { title: { zh: "3. 生成過程的隨機性", en: "3. Generative Randomness" }, desc: { zh: "即使相同歌詞與標籤，每次生成旋律皆不同。找到最佳協音版本需要多次生成或使用 Extend / Re-generate 功能。", en: "Melodies vary with every generation. Finding perfect tone harmonization often takes 2-3 takes or Extend iterations." }, color: "bg-sky-50 border-sky-300" }
+        ],
+        notes: {
+          zh: "導師提醒：用一個幽默的例子示範倒字，例如把『廣東話』唱成『光動話』，讓學員理解修音的必要性。",
+          en: "Instructor Tip: Give a humorous live example of a Cantonese tone mispronunciation so students get why tuning is needed."
+        }
+      },
+      // SLIDE 8: Hands-On: Improving Cantonese Pronunciation
+      {
+        id: 8,
+        title: { zh: "Step 6：實戰修音——改善與修復粵語發音", en: "Step 6: Hands-On Cantonese Pronunciation Fixes" },
+        subtitle: { zh: "3 大高效修音工作流：諧音替換、拼音註解與 Extend 再生成", en: "3 Efficient Fixes: Homophone Swap, Phonetic Tweaks & Extend Infill" },
+        workflow: [
+          { step: "A", name: { zh: "找出倒字", en: "Spot the Error" }, desc: { zh: "仔細試聽，標記出發音怪異或跑調的單字", en: "Listen closely and mark weirdly sung words" } },
+          { step: "B", name: { zh: "同音/諧音替換", en: "Homophone Swap" }, desc: { zh: "替換為聲調相同但 AI 更易識別的近義字", en: "Swap for a synonym with identical Cantonese tone" } },
+          { step: "C", name: { zh: "Suno Extend 局部修復", en: "Suno Extend Fix" }, desc: { zh: "從問題句前 2 秒點擊 Extend 重新生成", en: "Click Extend 2 seconds prior to re-roll the bar" } }
+        ],
+        fixPromptTitle: { zh: "🛠️ 粵語字音修正助手 Prompt (點擊複製)", en: "🛠️ Cantonese Tone Swap Assistant Prompt (Click to Copy)" },
+        fixPrompt: {
+          zh: "在廣東歌中，歌詞『(填入原歌詞)』中的『(填入問題字)』被 AI 唱得倒字跑調了。\n請提供 3 個粵語聲調完全相同、語意通順的近義詞或諧音替換字，方便我重新填入 AI 唱作中。",
+          en: "In my Cantonese song, the word '(Word)' in the line '(Line)' is mispronounced by AI.\nPlease suggest 3 Cantonese synonyms or homophones with identical tonal pitch so I can replace it."
+        },
+        notes: {
+          zh: "導師提醒：告訴學員『諧音替換』是最快見效的技巧，有時把廣東話字改寫成同音字，AI 就能秒發準音！",
+          en: "Instructor Tip: Tell students that homophone swapping works like magic for instant pitch corrections in Suno!"
+        }
+      },
+      // SLIDE 9: Optional: BandLab Stems & Vocals
+      {
+        id: 9,
+        title: { zh: "選修單元：BandLab 分軌與人聲導唱錄製", en: "Optional: BandLab Stem Splitter & Vocal Recording" },
+        subtitle: { zh: "將 AI 生成的伴奏分離，親自為作品獻唱加分", en: "Separate AI accompaniment and record your own custom vocals" },
+        bandlabSteps: [
+          { num: "1", title: { zh: "導出 Suno 音軌", en: "Export Suno Audio" }, desc: { zh: "下載高音質 MP3 / WAV 檔案", en: "Download high quality MP3 / WAV track" } },
+          { num: "2", title: { zh: "開啟 BandLab Stem Splitter", en: "BandLab Stem Splitter" }, desc: { zh: "免費將歌曲拆分為 Vocals & Instrumental", en: "Split song into Vocal & Instrumental stems" } },
+          { num: "3", title: { zh: "匯入 Studio 軌道", en: "Import to Studio" }, desc: { zh: "將伴奏軌 (Instrumental) 拖入新專案", en: "Drag the Instrumental track into a new session" } },
+          { num: "4", title: { zh: "接上麥克風錄音", en: "Plug Mic & Record" }, desc: { zh: "開啟 Vocal 軌道，佩戴耳機進行演唱錄製", en: "Add Vocal Track, put on headphones & record" } },
+          { num: "5", title: { zh: "套用 Preset 效果", en: "Apply Vocal Presets" }, desc: { zh: "選擇 'Pop Vocal' 或 'Warm Reverb' 預設", en: "Select 'Pop Vocal' or 'Warm Reverb' presets" } },
+          { num: "6", title: { zh: "混音與導出", en: "Mix & Export" }, desc: { zh: "調整人聲與伴奏音量比例，導出最終歌曲", en: "Balance vocal/beat volumes and export master" } }
+        ],
+        notes: {
+          zh: "導師備課：如時間充裕，可現場用手機示範 BandLab 30 秒分軌，展示如何替換 Suno 原有的 AI 人聲。",
+          en: "Instructor Note: If time permits, do a quick 30-second phone demo showing BandLab's Stem Splitter in action."
+        }
+      },
+      // SLIDE 10: Designing a Visual Cover
+      {
+        id: 10,
+        title: { zh: "Step 7：設計專屬歌曲視覺封面", en: "Step 7: Designing AI Album Art Cover" },
+        subtitle: { zh: "結合視覺意象，讓音樂作品在社交媒體更具吸引力", en: "Combine visual metaphors to make your track stand out on social media" },
+        coverElements: [
+          { icon: "🎨", title: { zh: "美術風格 (Style)", en: "Art Style" }, desc: { zh: "Cyberpunk 霓虹、復古黑膠、水彩插畫、3D 賽博高科技", en: "Cyberpunk neon, retro vinyl, watercolor, 3D render" } },
+          { icon: "📸", title: { zh: "主體構圖 (Subject)", en: "Subject Matter" }, desc: { zh: "寂寞雨夜的港島街道、提著吉他的孤獨背影、懷舊冰室門口", en: "Rainy HK street, guitarist's silhouette, retro cafe" } },
+          { icon: "✨", title: { zh: "光影氛圍 (Lighting)", en: "Mood & Lighting" }, desc: { zh: "黃昏夕陽餘暉、深夜藍調膠片感、柔和夢幻粉紫色調", en: "Golden hour glow, cinematic midnight blue, dreamy pastel" } }
+        ],
+        coverExampleTitle: { zh: "🖼️ 封面 Prompt 經典組合範例", en: "🖼️ Classic Album Cover Prompt Template" },
+        coverExampleText: {
+          zh: "Album cover art for a Cantopop song, vintage 80s Hong Kong neon street, rainy night reflections, cinematic lighting, aesthetic typography space, 8k resolution, detailed digital painting --ar 1:1",
+          en: "Album cover art for a Cantopop song, vintage 80s Hong Kong neon street, rainy night reflections, cinematic lighting, aesthetic typography space, 8k resolution, detailed digital painting --ar 1:1"
+        },
+        notes: {
+          zh: "導師提醒：提醒學員在生成封面時，留白區域 (Negative Space) 方便日後加上歌名與主唱名字。",
+          en: "Instructor Tip: Remind students that leaving empty space (negative space) in images makes adding title text easier!"
+        }
+      },
+      // SLIDE 11: Hands-On: Cover Prompt Builder
+      {
+        id: 11,
+        title: { zh: "實戰演練：封面 Prompt 生產器", en: "Hands-On: AI Cover Prompt Builder" },
+        subtitle: { zh: "點選風格標籤，即時合成 Midjourney / DALL-E / Bing 提示詞", en: "Select presets to construct Midjourney / DALL-E prompts live" },
+        notes: {
+          zh: "導師提醒：學員可直接使用 Bing Image Creator 或 Midjourney 生成，並下裁為 1:1 專輯正方形圖片。",
+          en: "Instructor Tip: Students can paste this into Bing Image Creator or Midjourney for a 1:1 square cover art."
+        }
+      },
+      // SLIDE 12: Showcase & Celebration
+      {
+        id: 12,
+        title: { zh: "Step 8：作品展示與課程結業總結", en: "Step 8: Song Showcase & Graduation Wrap-Up" },
+        subtitle: { zh: "恭喜！你已正式完成 90 分鐘 AI 廣東歌創作體驗", en: "Congratulations! You've mastered the 90-minute AI song pipeline" },
+        recapItems: [
+          { icon: "💡", title: { zh: "核心概念", en: "Core Concept" }, desc: { zh: "確立 4 大要素 (主題/情感/對象/畫面)", en: "Defined 4 Pillars (Theme, Emotion, Audience, Visuals)" } },
+          { icon: "✍️", title: { zh: "粵語寫詞", en: "Cantonese Prompting" }, desc: { zh: "Prompt 引導 AI 生成協音廣東歌詞", en: "Prompted LLM for naturally rhyming Cantonese lyrics" } },
+          { icon: "🎵", title: { zh: "Suno 生成", en: "Suno Generation" }, desc: { zh: "Style Tags 控制曲風與音軌修訂", en: "Controlled style tags & fixed pronunciation bugs" } },
+          { icon: "🖼️", title: { zh: "視覺與錄音", en: "Cover & Recording" }, desc: { zh: "AI 封面包裝 + BandLab 分軌人聲選修", en: "Designed AI album art + optional BandLab vocal stems" } }
+        ],
+        showcaseBoxTitle: { zh: "🎉 慶祝時刻：點擊下方按鈕施放慶祝彩帶！", en: "🎉 Celebration Time: Click below to launch victory confetti!" },
+        notes: {
+          zh: "導師備課：邀請 2-3 位學員上台或播放他們生成的 30 秒歌曲片段，全班給予掌聲鼓勵！",
+          en: "Instructor Note: Invite 2-3 students to play a 30-second snippet of their song and give them a big round of applause!"
+        }
+      },
+      // SLIDE 13: Pre-Class Preparation Checklist
+      {
+        id: 13,
+        title: { zh: "附錄：課前準備與教案清單", en: "Appendix: Pre-Class Checklist & Resources" },
+        subtitle: { zh: "導師備課與學員課前帳號籌備對照表", en: "Instructor setup guide and student account prep checklist" },
+        instructorTitle: { zh: "👨‍🏫 導師課前備課清單", en: "👨‍🏫 Instructor Checklist" },
+        instructorItems: [
+          { zh: "確認投影設備、音響與無綫麥克風測試正常", en: "Test projector, audio speakers, & wireless microphone" },
+          { zh: "準備 2-3 首優質學員範例歌曲 (以備開場示範)", en: "Prepare 2-3 sample student songs for opening demo" },
+          { zh: "確認 Suno 帳號剩餘 Credits (建議備用 200+ 點數)", en: "Check Suno account credits (Ensure 200+ credits available)" },
+          { zh: "建立學員作品分享社群群組 (如 WhatsApp/Discord)", en: "Set up student showcase group (WhatsApp / Discord)" }
+        ],
+        studentTitle: { zh: "👩‍🎓 學員課前準備清單", en: "👩‍🎓 Student Checklist" },
+        studentItems: [
+          { zh: "預先註冊 Suno.com 免費帳號", en: "Register free account on Suno.com beforehand" },
+          { zh: "預先註冊 ChatGPT / Claude / Kimi 帳號", en: "Set up ChatGPT / Claude / Kimi account" },
+          { zh: "攜帶筆記型電腦或平板電腦 (及耳機)", en: "Bring laptop or tablet (plus personal headphones)" },
+          { zh: "構思一個想寫的廣東歌主題故事", en: "Think of 1 Cantonese story or topic you'd like to write" }
+        ],
+        copyrightNotice: {
+          zh: "⚖️ 版權與使用聲明：Suno 免費版生成歌曲僅供非商業學習交流使用；如需上架 Spotify/Apple Music 需訂閱 Paid Plan。",
+          en: "⚖️ Copyright Notice: Free tier Suno songs are for non-commercial educational use. Paid plan required for Spotify/Apple Music distribution."
+        },
+        notes: {
+          zh: "導師提醒：課程結束前提供反饋問卷 QR Code，並提醒學員將歌曲連結分享至社群群組。",
+          en: "Instructor Tip: Display feedback QR code before session ends and encourage sharing tracks to the group chat."
+        }
+      }
+    ];
+
+    // --- RENDER LOGIC FOR SLIDES WITH EXTRA-LARGE TYPOGRAPHY ---
+    function renderSlide() {
+      const container = document.getElementById('slide-container');
+      const data = slideData[currentSlide];
+
+      // Update Counters
+      document.getElementById('current-slide-num').innerText = currentSlide + 1;
+      document.getElementById('total-slide-num').innerText = slideData.length;
+      document.getElementById('canvas-slide-num').innerText = `Slide ${currentSlide + 1} / ${slideData.length}`;
+      document.getElementById('progress-bar').style.width = `${((currentSlide + 1) / slideData.length) * 100}%`;
+      
+      // Disable/Enable Nav buttons
+      document.getElementById('txt-prev').parentElement.disabled = (currentSlide === 0);
+      document.getElementById('txt-next').parentElement.disabled = (currentSlide === slideData.length - 1);
+
+      // Render Notes Content
+      document.getElementById('notes-content').innerHTML = data.notes[currentLang] || data.notes['zh'];
+
+      // Build Slide Content HTML
+      let html = '';
+
+      switch (data.id) {
+        case 0:
+          html = `
+            <div class="space-y-8">
+              <!-- Slide Header Title Area -->
+              <div class="text-center space-y-3">
+                <span class="px-4 py-1.5 bg-indigo-100 text-indigo-800 font-extrabold text-sm sm:text-lg rounded-full inline-block border border-indigo-300">
+                  ${data.info[currentLang]}
+                </span>
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-tight">
+                  ${data.title[currentLang]}
+                </h1>
+                <p class="text-xl sm:text-2xl lg:text-3xl text-slate-600 font-bold">
+                  ${data.subtitle[currentLang]}
+                </p>
+              </div>
+
+              <!-- Outcomes Grid -->
+              <div class="bg-white rounded-2xl p-6 sm:p-8 border-2 border-slate-200 shadow-md">
+                <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-4 flex items-center space-x-3">
+                  <span>${data.outcomesTitle[currentLang]}</span>
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  ${data.outcomes.map(o => `
+                    <div class="bg-slate-50 rounded-2xl p-5 border-2 border-slate-200 hover:border-indigo-400 transition shadow-sm">
+                      <div class="font-black text-slate-900 text-xl sm:text-2xl mb-2">${o.title[currentLang]}</div>
+                      <div class="text-slate-700 text-base sm:text-lg leading-relaxed font-medium">${o.desc[currentLang]}</div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+
+              <!-- Clickable Agenda Table -->
+              <div class="bg-white rounded-2xl p-6 sm:p-8 border-2 border-slate-200 shadow-md">
+                <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-4">
+                  ${data.agendaTitle[currentLang]}
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  ${data.agenda.map(a => `
+                    <button onclick="goToSlide(${a.targetSlide})" class="flex items-center justify-between p-4 bg-slate-50 hover:bg-indigo-50 border-2 border-slate-200 hover:border-indigo-400 rounded-2xl transition text-left group">
+                      <div class="flex items-center space-x-4">
+                        <span class="font-mono text-sm sm:text-base font-black px-3 py-1.5 bg-indigo-600 text-white rounded-xl group-hover:bg-indigo-700">
+                          ${a.time}
+                        </span>
+                        <span class="font-extrabold text-slate-900 group-hover:text-indigo-900 text-lg sm:text-xl">
+                          ${a.title[currentLang]}
+                        </span>
+                      </div>
+                      <span class="text-slate-400 group-hover:text-indigo-600 font-black text-xl">→</span>
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+          `;
+          break;
+
+        case 1:
+          html = `
+            <div class="space-y-8">
+              <div class="border-b-2 border-slate-200 pb-4">
+                <h2 class="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight">${data.title[currentLang]}</h2>
+                <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-600 mt-2">${data.subtitle[currentLang]}</p>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                ${data.pipeline.map(p => `
+                  <div class="bg-white rounded-2xl p-6 border-4 ${p.color} shadow-md flex flex-col justify-between space-y-4">
+                    <div>
+                      <span class="font-mono text-sm sm:text-base font-black px-3 py-1 bg-slate-900 text-white rounded-lg">${p.step}</span>
+                      <h3 class="text-2xl sm:text-3xl font-black text-slate-900 mt-4 mb-2">${p.name[currentLang]}</h3>
+                      <p class="text-slate-700 text-base sm:text-lg leading-relaxed font-medium">${p.detail[currentLang]}</p>
+                    </div>
+                    <div class="pt-3 border-t border-slate-200 text-sm font-extrabold text-slate-400 uppercase tracking-wider">Pipeline Stage</div>
+                  </div>
+                `).join('')}
+              </div>
+
+              <div class="bg-amber-50 border-3 border-amber-400 rounded-2xl p-6 text-amber-950 font-bold text-lg sm:text-2xl shadow-md flex items-start space-x-4">
+                <span class="text-3xl sm:text-4xl">💡</span>
+                <div class="leading-relaxed">${data.callout[currentLang]}</div>
+              </div>
+            </div>
+          `;
+          break;
+
+        case 2:
+          html = `
+            <div class="space-y-8">
+              <div class="border-b-2 border-slate-200 pb-4">
+                <h2 class="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight">${data.title[currentLang]}</h2>
+                <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-600 mt-2">${data.subtitle[currentLang]}</p>
+              </div>
+
+              <!-- 4 Pillars Grid -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                ${data.elements.map(e => `
+                  <div class="bg-white rounded-2xl p-6 border-2 border-slate-200 shadow-sm space-y-2">
+                    <div class="text-4xl sm:text-5xl mb-2">${e.icon}</div>
+                    <h3 class="font-black text-slate-900 text-xl sm:text-2xl mb-2">${e.title[currentLang]}</h3>
+                    <p class="text-slate-700 text-base sm:text-lg leading-relaxed font-medium">${e.desc[currentLang]}</p>
+                  </div>
+                `).join('')}
+              </div>
+
+              <!-- Example Table -->
+              <div class="bg-white rounded-2xl p-6 sm:p-8 border-2 border-slate-200 shadow-md">
+                <h3 class="font-extrabold text-slate-900 text-2xl sm:text-3xl mb-4">${data.exampleBoxTitle[currentLang]}</h3>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left border-collapse">
+                    <thead>
+                      <tr class="bg-slate-100 border-b-2 border-slate-300 text-slate-800 text-base sm:text-xl">
+                        <th class="p-4 font-black w-1/3">要素 Pillar</th>
+                        <th class="p-4 font-black w-2/3">具體內容與細節 Details</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200 text-base sm:text-xl text-slate-800">
+                      ${data.exampleTable.map(r => `
+                        <tr>
+                          <td class="p-4 font-extrabold text-indigo-700 bg-slate-50/70">${r.key[currentLang]}</td>
+                          <td class="p-4 text-slate-900 font-bold leading-relaxed">${r.val[currentLang]}</td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          `;
+          break;
+
+        case 3:
+          html = renderSlide3LyricBuilder(data);
+          break;
+
+        case 4:
+          html = `
+            <div class="space-y-8">
+              <div class="border-b-2 border-slate-200 pb-4">
+                <h2 class="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight">${data.title[currentLang]}</h2>
+                <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-600 mt-2">${data.subtitle[currentLang]}</p>
+              </div>
+
+              <!-- Checklist -->
+              <div class="space-y-4">
+                ${data.checklist.map(c => `
+                  <div class="bg-white rounded-2xl p-6 border-2 border-slate-200 shadow-sm flex items-start space-x-4">
+                    <span class="text-indigo-600 text-3xl font-black">✓</span>
+                    <div>
+                      <h3 class="font-black text-slate-900 text-xl sm:text-2xl">${c.title[currentLang]}</h3>
+                      <p class="text-slate-700 text-base sm:text-xl leading-relaxed mt-1 font-medium">${c.desc[currentLang]}</p>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+
+              <!-- Prompt Card -->
+              <div class="bg-slate-900 rounded-2xl p-6 sm:p-8 text-white shadow-xl space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                  <span class="font-extrabold text-amber-400 text-lg sm:text-2xl">${data.promptTitle[currentLang]}</span>
+                  <button onclick="copyToClipboard(document.getElementById('refine-prompt-text').innerText)" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-base rounded-xl transition shadow">
+                    📋 Copy Prompt
+                  </button>
+                </div>
+                <pre id="refine-prompt-text" class="font-mono text-base sm:text-xl bg-slate-950 p-5 rounded-xl text-slate-200 whitespace-pre-wrap border border-slate-800 leading-relaxed">${data.refinementPrompt[currentLang]}</pre>
+              </div>
+            </div>
+          `;
+          break;
+
+        case 5:
+          html = `
+            <div class="space-y-8">
+              <div class="border-b-2 border-slate-200 pb-4">
+                <h2 class="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight">${data.title[currentLang]}</h2>
+                <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-600 mt-2">${data.subtitle[currentLang]}</p>
+              </div>
+
+              <!-- 6 Steps Grid -->
+              <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                ${data.workflowSteps.map(s => `
+                  <div class="bg-white rounded-2xl p-4 border-2 border-slate-200 shadow-sm text-center flex flex-col items-center justify-center space-y-2">
+                    <span class="w-10 h-10 rounded-full bg-indigo-600 text-white font-black text-lg flex items-center justify-center">${s.num}</span>
+                    <p class="font-extrabold text-slate-900 text-base sm:text-lg">${s.text[currentLang]}</p>
+                  </div>
+                `).join('')}
+              </div>
+
+              <!-- Style Tags Presets -->
+              <div class="bg-white rounded-2xl p-6 sm:p-8 border-2 border-slate-200 shadow-md">
+                <h3 class="font-extrabold text-slate-900 text-2xl sm:text-3xl mb-4">${data.stylePresetsTitle[currentLang]}</h3>
+                <div class="space-y-3">
+                  ${data.stylePresets.map(p => `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-50 border-2 border-slate-200 rounded-2xl gap-3">
+                      <div>
+                        <span class="font-black text-indigo-700 text-lg sm:text-xl block">${p.name[currentLang]}</span>
+                        <code class="text-base sm:text-lg font-mono text-slate-800 font-bold">${p.tag}</code>
+                      </div>
+                      <button onclick="copyToClipboard('${p.tag}')" class="px-4 py-2 bg-white hover:bg-indigo-50 border-2 border-slate-300 hover:border-indigo-400 font-extrabold text-sm sm:text-base rounded-xl transition shrink-0 self-start sm:self-center shadow-sm">
+                        📋 Copy Tag
+                      </button>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+          `;
+          break;
+
+        case 6:
+          const completedCount = slide6Checklist.filter(Boolean).length;
+          const progressPct = Math.round((completedCount / slide6Checklist.length) * 100);
+
+          html = `
+            <div class="space-y-8">
+              <div class="border-b-2 border-slate-200 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div>
+                  <h2 class="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight">${data.title[currentLang]}</h2>
+                  <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-600 mt-2">${data.subtitle[currentLang]}</p>
+                </div>
+                <div class="bg-indigo-100 border-2 border-indigo-300 text-indigo-900 px-6 py-3 rounded-2xl font-black text-lg sm:text-xl text-center shrink-0">
+                  ${currentLang === 'zh' ? '進度' : 'Progress'}: ${progressPct}% (${completedCount}/${slide6Checklist.length})
+                </div>
+              </div>
+
+              <!-- Interactive Checklist -->
+              <div class="bg-white rounded-2xl p-6 sm:p-8 border-2 border-slate-200 shadow-md space-y-4">
+                <h3 class="font-extrabold text-slate-900 text-2xl sm:text-3xl mb-3">${data.checklistTitle[currentLang]}</h3>
+                ${data.tasks.map((t, idx) => `
+                  <label class="flex items-center space-x-4 p-4 bg-slate-50 rounded-2xl border-2 border-slate-200 hover:bg-indigo-50/60 cursor-pointer transition">
+                    <input type="checkbox" onchange="toggleSlide6Check(${idx})" ${slide6Checklist[idx] ? 'checked' : ''} class="w-7 h-7 accent-indigo-600 rounded-lg">
+                    <span class="text-slate-900 font-extrabold text-lg sm:text-2xl ${slide6Checklist[idx] ? 'line-through text-slate-400' : ''}">
+                      ${t[currentLang]}
+                    </span>
+                  </label>
+                `).join('')}
+              </div>
+
+              <!-- Backup Plan -->
+              <div class="bg-rose-50 border-3 border-rose-300 rounded-2xl p-6 text-rose-950 shadow-md space-y-2">
+                <h4 class="font-black text-rose-900 text-xl sm:text-2xl">${data.backupPlanTitle[currentLang]}</h4>
+                <p class="text-base sm:text-xl text-rose-950 leading-relaxed font-medium">${data.backupPlanText[currentLang]}</p>
+              </div>
+            </div>
+          `;
+          break;
+
+        case 7:
+          html = `
+            <div class="space-y-8">
+              <div class="border-b-2 border-slate-200 pb-4">
+                <h2 class="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight">${data.title[currentLang]}</h2>
+                <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-600 mt-2">${data.subtitle[currentLang]}</p>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                ${data.reasons.map(r => `
+                  <div class="rounded-2xl p-6 sm:p-8 border-3 ${r.color} shadow-md space-y-3">
+                    <h3 class="font-black text-slate-900 text-2xl sm:text-3xl">${r.title[currentLang]}</h3>
+                    <p class="text-slate-800 text-base sm:text-xl leading-relaxed font-medium">${r.desc[currentLang]}</p>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+          break;
+
+        case 8:
+          html = `
+            <div class="space-y-8">
+              <div class="border-b-2 border-slate-200 pb-4">
+                <h2 class="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight">${data.title[currentLang]}</h2>
+                <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-600 mt-2">${data.subtitle[currentLang]}</p>
+              </div>
+
+              <!-- 3 Step Workflow -->
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                ${data.workflow.map(w => `
+                  <div class="bg-white rounded-2xl p-6 sm:p-8 border-2 border-slate-200 shadow-md text-center space-y-3">
+                    <span class="w-12 h-12 rounded-full bg-slate-900 text-white font-black text-xl flex items-center justify-center mx-auto">${w.step}</span>
+                    <h3 class="font-black text-slate-900 text-2xl sm:text-3xl">${w.name[currentLang]}</h3>
+                    <p class="text-slate-700 text-base sm:text-xl font-medium leading-relaxed">${w.desc[currentLang]}</p>
+                  </div>
+                `).join('')}
+              </div>
+
+              <!-- Fix Prompt Card -->
+              <div class="bg-slate-900 rounded-2xl p-6 sm:p-8 text-white shadow-xl space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                  <span class="font-extrabold text-amber-400 text-lg sm:text-2xl">${data.fixPromptTitle[currentLang]}</span>
+                  <button onclick="copyToClipboard(document.getElementById('fix-prompt-text').innerText)" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-base rounded-xl transition shadow">
+                    📋 Copy Prompt
+                  </button>
+                </div>
+                <pre id="fix-prompt-text" class="font-mono text-base sm:text-xl bg-slate-950 p-5 rounded-xl text-slate-200 whitespace-pre-wrap border border-slate-800 leading-relaxed">${data.fixPrompt[currentLang]}</pre>
+              </div>
+            </div>
+          `;
+          break;
+
+        case 9:
+          html = `
+            <div class="space-y-8">
+              <div class="border-b-2 border-slate-200 pb-4">
+                <h2 class="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight">${data.title[currentLang]}</h2>
+                <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-600 mt-2">${data.subtitle[currentLang]}</p>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                ${data.bandlabSteps.map(b => `
+                  <div class="bg-white rounded-2xl p-6 border-2 border-slate-200 shadow-md space-y-3">
+                    <span class="w-9 h-9 rounded-full bg-sky-600 text-white font-black text-lg flex items-center justify-center">${b.num}</span>
+                    <h3 class="font-black text-slate-900 text-xl sm:text-2xl">${b.title[currentLang]}</h3>
+                    <p class="text-slate-700 text-base sm:text-lg font-medium leading-relaxed">${b.desc[currentLang]}</p>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+          break;
+
+        case 10:
+          html = `
+            <div class="space-y-8">
+              <div class="border-b-2 border-slate-200 pb-4">
+                <h2 class="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight">${data.title[currentLang]}</h2>
+                <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-600 mt-2">${data.subtitle[currentLang]}</p>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                ${data.coverElements.map(c => `
+                  <div class="bg-white rounded-2xl p-6 sm:p-8 border-2 border-slate-200 shadow-md space-y-3">
+                    <div class="text-4xl sm:text-5xl mb-2">${c.icon}</div>
+                    <h3 class="font-black text-slate-900 text-2xl sm:text-3xl">${c.title[currentLang]}</h3>
+                    <p class="text-slate-700 text-base sm:text-xl leading-relaxed font-medium">${c.desc[currentLang]}</p>
+                  </div>
+                `).join('')}
+              </div>
+
+              <div class="bg-slate-900 rounded-2xl p-6 sm:p-8 text-white shadow-xl space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                  <span class="font-extrabold text-amber-400 text-lg sm:text-2xl">${data.coverExampleTitle[currentLang]}</span>
+                  <button onclick="copyToClipboard('${data.coverExampleText[currentLang]}')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-base rounded-xl transition shadow">
+                    📋 Copy Template
+                  </button>
+                </div>
+                <code class="block font-mono text-base sm:text-xl bg-slate-950 p-5 rounded-xl text-emerald-400 border border-slate-800 break-words leading-relaxed">${data.coverExampleText[currentLang]}</code>
+              </div>
+            </div>
+          `;
+          break;
+
+        case 11:
+          html = renderSlide11CoverBuilder(data);
+          break;
+
+        case 12:
+          html = `
+            <div class="space-y-8 text-center">
+              <div>
+                <h2 class="text-4xl sm:text-6xl font-black text-slate-900 tracking-tight">${data.title[currentLang]}</h2>
+                <p class="text-2xl sm:text-3xl font-bold text-slate-600 mt-2">${data.subtitle[currentLang]}</p>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
+                ${data.recapItems.map(r => `
+                  <div class="bg-white rounded-2xl p-6 border-2 border-slate-200 shadow-md space-y-2">
+                    <div class="text-4xl sm:text-5xl mb-2">${r.icon}</div>
+                    <h3 class="font-black text-slate-900 text-2xl">${r.title[currentLang]}</h3>
+                    <p class="text-slate-700 text-base sm:text-lg font-medium leading-relaxed">${r.desc[currentLang]}</p>
+                  </div>
+                `).join('')}
+              </div>
+
+              <div class="bg-indigo-50 border-4 border-indigo-200 rounded-3xl p-8 sm:p-10 text-center space-y-6 shadow-xl">
+                <h3 class="text-2xl sm:text-4xl font-black text-indigo-950">${data.showcaseBoxTitle[currentLang]}</h3>
+                <button onclick="fireConfetti()" class="px-10 py-5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xl sm:text-2xl rounded-full shadow-2xl shadow-indigo-300 transition transform hover:scale-105 active:scale-95 border-2 border-indigo-400">
+                  🎉 Launch Confetti (慶祝完成)
+                </button>
+              </div>
+            </div>
+          `;
+          break;
+
+        case 13:
+          html = `
+            <div class="space-y-8">
+              <div class="border-b-2 border-slate-200 pb-4">
+                <h2 class="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight">${data.title[currentLang]}</h2>
+                <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-600 mt-2">${data.subtitle[currentLang]}</p>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Instructor Checkbox -->
+                <div class="bg-white rounded-2xl p-6 sm:p-8 border-2 border-slate-200 shadow-md space-y-4">
+                  <h3 class="font-black text-slate-900 text-2xl sm:text-3xl border-b pb-2">${data.instructorTitle[currentLang]}</h3>
+                  ${data.instructorItems.map((item, idx) => `
+                    <label class="flex items-center space-x-4 p-3.5 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-100 transition">
+                      <input type="checkbox" onchange="toggleInstructorCheck(${idx})" ${slide13InstructorChecks[idx] ? 'checked' : ''} class="w-6 h-6 accent-indigo-600 rounded">
+                      <span class="text-base sm:text-xl font-bold text-slate-800 ${slide13InstructorChecks[idx] ? 'line-through text-slate-400' : ''}">${item[currentLang]}</span>
+                    </label>
+                  `).join('')}
+                </div>
+
+                <!-- Student Checkbox -->
+                <div class="bg-white rounded-2xl p-6 sm:p-8 border-2 border-slate-200 shadow-md space-y-4">
+                  <h3 class="font-black text-slate-900 text-2xl sm:text-3xl border-b pb-2">${data.studentTitle[currentLang]}</h3>
+                  ${data.studentItems.map((item, idx) => `
+                    <label class="flex items-center space-x-4 p-3.5 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-100 transition">
+                      <input type="checkbox" onchange="toggleStudentCheck(${idx})" ${slide13StudentChecks[idx] ? 'checked' : ''} class="w-6 h-6 accent-indigo-600 rounded">
+                      <span class="text-base sm:text-xl font-bold text-slate-800 ${slide13StudentChecks[idx] ? 'line-through text-slate-400' : ''}">${item[currentLang]}</span>
+                    </label>
+                  `).join('')}
+                </div>
+              </div>
+
+              <div class="bg-slate-100 border-2 border-slate-300 rounded-2xl p-5 text-slate-800 text-base sm:text-lg font-bold">
+                ${data.copyrightNotice[currentLang]}
+              </div>
+            </div>
+          `;
+          break;
+      }
+
+      container.innerHTML = html;
+      renderDrawerMenu();
+    }
+
+    // --- SLIDE 3 PROMPT BUILDER HELPER ---
+    function renderSlide3LyricBuilder(data) {
+      const topicOptions = [
+        { zh: '懷舊港式茶餐廳', en: 'Retro HK Tea Restaurant' },
+        { zh: '數碼遊民的孤獨', en: 'Digital Nomad Solitude' },
+        { zh: '廣東歌復興', en: 'Cantopop Revival' },
+        { zh: '青春夢想與拼搏', en: 'Youth Dreams & Hustle' }
+      ];
+
+      const emotionOptions = [
+        { zh: '溫馨懷舊', en: 'Warm Nostalgia' },
+        { zh: '激昂勵志', en: 'Inspirational Rock' },
+        { zh: '淡淡哀傷', en: 'Bittersweet Melancholy' },
+        { zh: '輕鬆幽默', en: 'Witty & Humorous' }
+      ];
+
+      const generatedPrompt = currentLang === 'zh' 
+        ? `你是一位頂尖廣東歌詞創作者。請為我創作一首完整廣東歌詞：\n- 主題：${slide3PresetTopic}\n- 情感基調：${slide3PresetEmotion}\n- 語言要點：正宗粵語口語與雅緻詞句結合，嚴格注意廣東九聲六調的協音與押韻。\n- 結構要求：包含 [Verse 1], [Pre-Chorus], [Chorus], [Verse 2], [Chorus], [Bridge], [Outro]`
+        : `You are a master Cantopop lyricist. Write a complete set of Cantonese lyrics:\n- Topic: ${slide3PresetTopic}\n- Emotional Vibe: ${slide3PresetEmotion}\n- Language: Authentic Cantonese, ensuring tonal harmony and standard Cantonese rhyme schemes.\n- Song Structure: Include [Verse 1], [Pre-Chorus], [Chorus], [Verse 2], [Chorus], [Bridge], [Outro]`;
+
+      return `
+        <div class="space-y-8">
+          <div class="border-b-2 border-slate-200 pb-4">
+            <h2 class="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight">${data.title[currentLang]}</h2>
+            <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-600 mt-2">${data.subtitle[currentLang]}</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Controls -->
+            <div class="bg-white rounded-2xl p-6 sm:p-8 border-2 border-slate-200 shadow-md space-y-6">
+              <div>
+                <label class="block font-black text-slate-900 text-lg sm:text-xl mb-3">1. 選擇主題 Topic Preset</label>
+                <div class="grid grid-cols-2 gap-3">
+                  ${topicOptions.map(t => `
+                    <button onclick="setSlide3Topic('${t.zh}')" class="p-3 text-sm sm:text-base font-extrabold rounded-xl border-2 text-left transition ${slide3PresetTopic === t.zh ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 text-slate-800 border-slate-200 hover:bg-slate-100'}">
+                      ${t[currentLang]}
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+
+              <div>
+                <label class="block font-black text-slate-900 text-lg sm:text-xl mb-3">2. 選擇情感 Emotion Preset</label>
+                <div class="grid grid-cols-2 gap-3">
+                  ${emotionOptions.map(e => `
+                    <button onclick="setSlide3Emotion('${e.zh}')" class="p-3 text-sm sm:text-base font-extrabold rounded-xl border-2 text-left transition ${slide3PresetEmotion === e.zh ? 'bg-rose-600 text-white border-rose-600' : 'bg-slate-50 text-slate-800 border-slate-200 hover:bg-slate-100'}">
+                      ${e[currentLang]}
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+
+            <!-- Output Box -->
+            <div class="bg-slate-900 rounded-2xl p-6 sm:p-8 text-white shadow-xl flex flex-col justify-between space-y-4">
+              <div>
+                <div class="flex justify-between items-center border-b border-slate-700 pb-3 mb-3">
+                  <span class="font-extrabold text-amber-400 text-lg sm:text-xl">🎯 生成的歌詞 Prompt</span>
+                  <button onclick="copyToClipboard(document.getElementById('slide3-prompt-out').innerText)" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm sm:text-base rounded-xl transition">
+                    📋 Copy Prompt
+                  </button>
+                </div>
+                <pre id="slide3-prompt-out" class="font-mono text-base sm:text-lg bg-slate-950 p-5 rounded-xl text-slate-200 whitespace-pre-wrap border border-slate-800 leading-relaxed">${generatedPrompt}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // --- SLIDE 11 COVER BUILDER HELPER ---
+    function renderSlide11CoverBuilder(data) {
+      const artStyles = ['Cyberpunk Neon', 'Retro City Pop', 'Warm Watercolor', 'Minimalist Line Art'];
+      const moods = ['Golden Hour Glow', 'Midnight Neon', 'Soft Pastel Mood', 'Cinematic Dramatic'];
+
+      const generatedCoverPrompt = `Album cover art for a Cantopop song, style: ${slide11ArtStyle}, mood: ${slide11Mood}, Hong Kong urban aesthetics, aesthetic typography space, 8k resolution, ultra-detailed --ar 1:1`;
+
+      return `
+        <div class="space-y-8">
+          <div class="border-b-2 border-slate-200 pb-4">
+            <h2 class="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight">${data.title[currentLang]}</h2>
+            <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-600 mt-2">${data.subtitle[currentLang]}</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white rounded-2xl p-6 sm:p-8 border-2 border-slate-200 shadow-md space-y-6">
+              <div>
+                <label class="block font-black text-slate-900 text-lg sm:text-xl mb-3">1. 藝術風格 Art Style</label>
+                <div class="grid grid-cols-2 gap-3">
+                  ${artStyles.map(s => `
+                    <button onclick="setSlide11Style('${s}')" class="p-3 text-sm sm:text-base font-extrabold rounded-xl border-2 text-left transition ${slide11ArtStyle === s ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 text-slate-800 border-slate-200 hover:bg-slate-100'}">
+                      ${s}
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+
+              <div>
+                <label class="block font-black text-slate-900 text-lg sm:text-xl mb-3">2. 光影氛圍 Mood & Lighting</label>
+                <div class="grid grid-cols-2 gap-3">
+                  ${moods.map(m => `
+                    <button onclick="setSlide11Mood('${m}')" class="p-3 text-sm sm:text-base font-extrabold rounded-xl border-2 text-left transition ${slide11Mood === m ? 'bg-sky-600 text-white border-sky-600' : 'bg-slate-50 text-slate-800 border-slate-200 hover:bg-slate-100'}">
+                      ${m}
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-slate-900 rounded-2xl p-6 sm:p-8 text-white shadow-xl flex flex-col justify-between space-y-4">
+              <div>
+                <div class="flex justify-between items-center border-b border-slate-700 pb-3 mb-3">
+                  <span class="font-extrabold text-amber-400 text-lg sm:text-xl">🖼️ 封面 Prompt (Midjourney / DALL-E)</span>
+                  <button onclick="copyToClipboard(document.getElementById('slide11-prompt-out').innerText)" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm sm:text-base rounded-xl transition">
+                    📋 Copy Prompt
+                  </button>
+                </div>
+                <code id="slide11-prompt-out" class="block font-mono text-base sm:text-lg bg-slate-950 p-5 rounded-xl text-emerald-400 border border-slate-800 break-words leading-relaxed">${generatedCoverPrompt}</code>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // --- DRAWER MENU RENDER ---
+    function renderDrawerMenu() {
+      const listContainer = document.getElementById('menu-list');
+      listContainer.innerHTML = slideData.map((s, idx) => `
+        <button onclick="goToSlide(${idx}); toggleMenu();" class="w-full text-left p-3 rounded-xl transition font-extrabold text-base sm:text-lg flex items-center space-x-3 ${idx === currentSlide ? 'bg-indigo-50 text-indigo-700 border-2 border-indigo-300' : 'hover:bg-slate-100 text-slate-800'}">
+          <span class="font-mono text-xs sm:text-sm px-2.5 py-1 rounded-lg bg-slate-200 text-slate-900 font-black">${idx + 1}</span>
+          <span class="truncate">${s.title[currentLang]}</span>
+        </button>
+      `).join('');
+    }
+
+    // --- STATE INTERACTION HANDLERS ---
+    function setSlide3Topic(topic) { slide3PresetTopic = topic; renderSlide(); }
+    function setSlide3Emotion(emotion) { slide3PresetEmotion = emotion; renderSlide(); }
+    function toggleSlide6Check(idx) { slide6Checklist[idx] = !slide6Checklist[idx]; renderSlide(); }
+    function setSlide11Style(style) { slide11ArtStyle = style; renderSlide(); }
+    function setSlide11Mood(mood) { slide11Mood = mood; renderSlide(); }
+    function toggleInstructorCheck(idx) { slide13InstructorChecks[idx] = !slide13InstructorChecks[idx]; renderSlide(); }
+    function toggleStudentCheck(idx) { slide13StudentChecks[idx] = !slide13StudentChecks[idx]; renderSlide(); }
+
+    // --- NAVIGATION LOGIC ---
+    function nextSlide() {
+      if (currentSlide < slideData.length - 1) {
+        currentSlide++;
+        renderSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        currentSlide--;
+        renderSlide();
+      }
+    }
+
+    function goToSlide(idx) {
+      if (idx >= 0 && idx < slideData.length) {
+        currentSlide = idx;
+        renderSlide();
+      }
+    }
+
+    // --- LANGUAGE TOGGLE ---
+    function toggleLanguage() {
+      currentLang = currentLang === 'zh' ? 'en' : 'zh';
+      document.getElementById('lang-indicator').innerText = currentLang === 'zh' ? '🌐 繁體中文' : '🌐 English';
+      
+      // Update Persistent UI Elements
+      document.getElementById('txt-header-title').innerText = currentLang === 'zh' ? 'AI 廣東歌創作體驗班' : 'AI Cantonese Song Creation Workshop';
+      document.getElementById('txt-menu-btn').innerText = currentLang === 'zh' ? '選單' : 'Menu';
+      document.getElementById('txt-notes-btn').innerText = currentLang === 'zh' ? '備課筆記 (N)' : 'Notes (N)';
+      document.getElementById('txt-notes-header').innerText = currentLang === 'zh' ? '導師備課與教學提醒' : 'Instructor Teaching Notes';
+      document.getElementById('txt-drawer-title').innerText = currentLang === 'zh' ? '簡報章節目錄' : 'Slide Contents';
+      document.getElementById('txt-prev').innerText = currentLang === 'zh' ? '上一頁' : 'Previous';
+      document.getElementById('txt-next').innerText = currentLang === 'zh' ? '下一頁' : 'Next';
+      document.getElementById('txt-slide-label').innerText = currentLang === 'zh' ? '簡報' : 'Slide';
+      document.getElementById('txt-timer-preset-title').innerText = currentLang === 'zh' ? '設置倒數計時' : 'Timer Presets';
+      document.getElementById('toast-text').innerText = currentLang === 'zh' ? '已成功複製到剪貼簿！' : 'Copied to clipboard!';
+
+      renderSlide();
+    }
+
+    // --- TIMER UTILITY ---
+    function updateTimerDisplay() {
+      const mins = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+      const secs = (timerSeconds % 60).toString().padStart(2, '0');
+      document.getElementById('timer-display').innerText = `${mins}:${secs}`;
+    }
+
+    function toggleTimer() {
+      const btn = document.getElementById('timer-toggle-btn');
+      if (isTimerRunning) {
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+        btn.innerText = '▶ Start';
+        btn.className = 'px-3 py-1.5 bg-indigo-600 text-white rounded-lg font-bold text-xs sm:text-sm hover:bg-indigo-700 transition shadow';
+      } else {
+        if (timerSeconds <= 0) timerSeconds = 300; // default 5m
+        isTimerRunning = true;
+        btn.innerText = '⏸ Pause';
+        btn.className = 'px-3 py-1.5 bg-amber-600 text-white rounded-lg font-bold text-xs sm:text-sm hover:bg-amber-700 transition shadow';
+        timerInterval = setInterval(() => {
+          if (timerSeconds > 0) {
+            timerSeconds--;
+            updateTimerDisplay();
+          } else {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            btn.innerText = '▶ Start';
+            btn.className = 'px-3 py-1.5 bg-indigo-600 text-white rounded-lg font-bold text-xs sm:text-sm hover:bg-indigo-700 transition shadow';
+            alert('⏱ 時間到！Time is up!');
+          }
+        }, 1000);
+      }
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      isTimerRunning = false;
+      timerSeconds = 0;
+      updateTimerDisplay();
+      document.getElementById('timer-toggle-btn').innerText = '▶ Start';
+    }
+
+    function setTimerPreset(sec) {
+      resetTimer();
+      timerSeconds = sec;
+      updateTimerDisplay();
+      document.getElementById('timer-dropdown').classList.add('hidden');
+    }
+
+    function toggleTimerMenu() {
+      document.getElementById('timer-dropdown').classList.toggle('hidden');
+    }
+
+    // --- DRAWER & NOTES TOGGLES ---
+    function toggleMenu() {
+      document.getElementById('menu-drawer').classList.toggle('hidden');
+    }
+
+    function toggleNotes() {
+      notesOpen = !notesOpen;
+      const panel = document.getElementById('notes-panel');
+      if (notesOpen) {
+        panel.classList.remove('hidden');
+      } else {
+        panel.classList.add('hidden');
+      }
+    }
+
+    // --- COPY TO CLIPBOARD ---
+    function copyToClipboard(text) {
+      if (!text) return;
+      const el = document.createElement('textarea');
+      el.value = text;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+
+      const toast = document.getElementById('toast');
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 2000);
+    }
+
+    // --- CONFETTI LAUNCHER ---
+    function fireConfetti() {
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 150,
+          spread: 90,
+          origin: { y: 0.6 }
+        });
+      }
+    }
+
+    // --- KEYBOARD SHORTCUTS ---
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        prevSlide();
+      } else if (e.key === 'm' || e.key === 'M') {
+        toggleMenu();
+      } else if (e.key === 'n' || e.key === 'N') {
+        toggleNotes();
+      }
+    });
+
+    // --- INITIALIZE ON LOAD ---
+    window.onload = function () {
+      renderSlide();
+      updateTimerDisplay();
+    };
+  </script>
+</body>
+</html>
